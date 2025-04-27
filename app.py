@@ -1,32 +1,13 @@
 from flask import Flask, request, jsonify
-from summarizer.summarizer import Summarizer
+from summarizer.translation_module import TextTranslator
 import os
 
 app = Flask(__name__)
-summarizer = Summarizer()
+translator = TextTranslator()
 
 @app.route("/", methods=["GET"])
 def home():
-    return "CareCompanion Summarizer API is running."
-
-@app.route("/summarize", methods=["POST"])
-def summarize():
-    try:
-        data = request.get_json(force=True)  # force=True ensures it parses JSON even if content-type is off
-    except Exception as e:
-        return jsonify({"error": f"Invalid JSON: {str(e)}"}), 400
-
-    if not data or "text" not in data:
-        return jsonify({"error": "Missing 'text' field"}), 400
-
-    text = data["text"]
-    target_lang = data.get("target_lang", "en")
-
-    try:
-        summary = summarizer.summarize_text(text, target_lang)
-        return jsonify({"summary": summary})
-    except Exception as e:
-        return jsonify({"error": f"Summarization failed: {str(e)}"}), 500
+    return "CareCompanion Translation API is running."
 
 @app.route("/translate", methods=["POST"])
 def translate():
@@ -42,7 +23,7 @@ def translate():
     target_lang = data["target_lang"]
 
     try:
-        translated_text = summarizer.translate_text(text, target_lang)
+        translated_text = translator.translate_from_english(text, target_lang) if target_lang != 'en' else translator.translate_to_english(text)
         return jsonify({"translated_text": translated_text})
     except Exception as e:
         return jsonify({"error": f"Translation failed: {str(e)}"}), 500
